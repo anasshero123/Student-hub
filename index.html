@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Student Hub 🇲🇦</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Arial;background:#f5f7fb;color:#172033}
+header{background:linear-gradient(135deg,#315efb,#6b4df5);color:white;padding:28px 18px;border-radius:0 0 28px 28px}
+header h1{margin:0 0 6px;font-size:30px}header p{margin:0;opacity:.9}
+nav{display:flex;gap:8px;overflow:auto;padding:14px;position:sticky;top:0;background:#f5f7fb;z-index:2}
+nav button{border:0;border-radius:14px;padding:11px 15px;background:white;color:#334;white-space:nowrap;box-shadow:0 2px 10px #0000000d}
+nav button.active{background:#315efb;color:white}
+main{max-width:900px;margin:auto;padding:0 14px 40px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.card{background:white;border-radius:20px;padding:18px;box-shadow:0 6px 24px #0000000b;margin-bottom:14px}
+.card h2{font-size:19px;margin:0 0 12px}.stat{font-size:30px;font-weight:800}
+input,select{width:100%;padding:12px;border:1px solid #dde2ee;border-radius:12px;margin:5px 0 10px;font-size:15px}
+.btn{border:0;background:#315efb;color:white;border-radius:12px;padding:11px 15px;font-weight:700;cursor:pointer}
+.btn.secondary{background:#eef2ff;color:#315efb}.task{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #eee}
+.task.done{text-decoration:line-through;opacity:.55}.muted{color:#6d7485;font-size:14px}
+#timer{font-size:48px;font-weight:800;text-align:center;margin:15px}
+.hidden{display:none}.result{font-size:18px;font-weight:700;margin-top:10px}
+</style>
+</head>
+<body>
+<header><h1>Student Hub 🇲🇦</h1><p>مركزك الدراسي — نظم وقتك، احسب معدلك وتعلّم بذكاء.</p></header>
+<nav>
+<button class="active" onclick="show('home',this)">الرئيسية</button>
+<button onclick="show('grades',this)">المعدل</button>
+<button onclick="show('tasks',this)">المهام</button>
+<button onclick="show('timerPage',this)">المؤقت</button>
+<button onclick="show('quiz',this)">اختبار</button>
+</nav>
+<main>
+<section id="home">
+<div class="grid">
+<div class="card"><div class="muted">معدل المواد</div><div class="stat" id="homeAvg">—</div></div>
+<div class="card"><div class="muted">المهام المتبقية</div><div class="stat" id="homeTasks">0</div></div>
+<div class="card"><div class="muted">هدف اليوم</div><div class="stat">25 د</div><p class="muted">ابدأ جلسة تركيز الآن.</p></div>
+</div>
+<div class="card"><h2>👋 أهلاً بك!</h2><p>هذه نسخة أولى من Student Hub. البيانات تُحفظ على جهازك تلقائيًا.</p>
+<button class="btn" onclick="show('grades')">ابدأ بحساب المعدل</button></div>
+</section>
+
+<section id="grades" class="hidden">
+<div class="card"><h2>🧮 حساب المعدل</h2><p class="muted">أدخل النقطة والمعامل لكل مادة.</p>
+<div id="subjects"></div>
+<button class="btn secondary" onclick="addSubject()">+ إضافة مادة</button>
+<button class="btn" onclick="calc()">احسب المعدل</button>
+<div id="avg" class="result"></div></div>
+</section>
+
+<section id="tasks" class="hidden">
+<div class="card"><h2>✅ مهامي</h2>
+<input id="taskInput" placeholder="مثلاً: مراجعة الرياضيات">
+<button class="btn" onclick="addTask()">إضافة مهمة</button>
+<div id="taskList"></div></div>
+</section>
+
+<section id="timerPage" class="hidden">
+<div class="card"><h2>⏱️ مؤقت التركيز</h2><div id="timer">25:00</div>
+<div style="text-align:center"><button class="btn" onclick="startTimer()">ابدأ</button>
+<button class="btn secondary" onclick="resetTimer()">إعادة</button></div></div>
+</section>
+
+<section id="quiz" class="hidden">
+<div class="card"><h2>🧠 اختبار سريع</h2>
+<p><b>ما ناتج 12 × 8؟</b></p>
+<button class="btn" onclick="answer(false)">86</button>
+<button class="btn" onclick="answer(true)">96</button>
+<button class="btn" onclick="answer(false)">108</button>
+<div id="quizResult" class="result"></div></div>
+</section>
+</main>
+<script>
+let subjects=JSON.parse(localStorage.getItem('subjects')||'[]');
+let tasks=JSON.parse(localStorage.getItem('tasks')||'[]');
+function show(id,btn){document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');update()}
+function addSubject(name='',grade='',coef=''){let d=document.createElement('div');d.className='grid';d.innerHTML=`<div><input class="sn" placeholder="المادة" value="${name}"></div><div><input class="sg" type="number" min="0" max="20" placeholder="النقطة" value="${grade}"></div><div><input class="sc" type="number" min="1" placeholder="المعامل" value="${coef||1}"></div>`;document.getElementById('subjects').appendChild(d)}
+function calc(){let ns=[...document.querySelectorAll('.sn')],gs=[...document.querySelectorAll('.sg')],cs=[...document.querySelectorAll('.sc')];let sum=0,c=0;subjects=[];for(let i=0;i<gs.length;i++){let g=+gs[i].value||0,co=+cs[i].value||1;subjects.push({name:ns[i].value,grade:g,coef:co});sum+=g*co;c+=co}let a=c?sum/c:0;document.getElementById('avg').textContent='معدلك: '+a.toFixed(2)+' / 20';localStorage.setItem('subjects',JSON.stringify(subjects));document.getElementById('homeAvg').textContent=a.toFixed(2)}
+function addTask(){let v=document.getElementById('taskInput').value.trim();if(!v)return;tasks.push({text:v,done:false});localStorage.setItem('tasks',JSON.stringify(tasks));document.getElementById('taskInput').value='';renderTasks()}
+function renderTasks(){let box=document.getElementById('taskList');box.innerHTML='';tasks.forEach((t,i)=>{let d=document.createElement('div');d.className='task '+(t.done?'done':'');d.innerHTML=`<input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${i})"><span>${t.text}</span>`;box.appendChild(d)});update()}
+function toggleTask(i){tasks[i].done=!tasks[i].done;localStorage.setItem('tasks',JSON.stringify(tasks));renderTasks()}
+function update(){document.getElementById('homeTasks').textContent=tasks.filter(t=>!t.done).length;if(subjects.length){let s=subjects.reduce((a,x)=>a+x.grade*x.coef,0),c=subjects.reduce((a,x)=>a+x.coef,0);document.getElementById('homeAvg').textContent=(s/c).toFixed(2)}}
+let sec=1500,interval=null;
+function draw(){document.getElementById('timer').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}
+function startTimer(){if(interval)return;interval=setInterval(()=>{if(sec>0){sec--;draw()}else{clearInterval(interval);interval=null;alert('انتهت جلسة التركيز! 🎉')}},1000)}
+function resetTimer(){clearInterval(interval);interval=null;sec=1500;draw()}
+function answer(ok){document.getElementById('quizResult').textContent=ok?'✅ صحيح!':'❌ حاول مرة أخرى.'}
+subjects.forEach(x=>addSubject(x.name,x.grade,x.coef));if(!subjects.length)addSubject();renderTasks();update();
+</script>
+</body></html>
